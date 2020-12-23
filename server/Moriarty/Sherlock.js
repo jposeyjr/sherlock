@@ -14,3 +14,10 @@ const getData = async () => {
 };
 
 getData();
+
+const getImages = async () => {
+  const imageData = await sherlock.getImages();
+  console.log('image data', imageData);
+};
+
+getImages();

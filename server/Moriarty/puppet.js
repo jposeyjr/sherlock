@@ -2,7 +2,8 @@ class Moriarty {
   constructor(url, commands) {
     this.url = url;
     this.commands = commands;
-    this.data = [];
+    this.linkData = [];
+    this.imageData = [];
   }
 
   async startPuppet() {
@@ -23,20 +24,75 @@ class Moriarty {
     }); //end of page.goto (loads the page)
     try {
       let results = await page.$$eval('a', (as) => as.map((a) => a.href));
-      this.data.push(results);
-      await browser.close();
+      this.linkData.push(results);
       console.log('browser closed');
     } catch (error) {
       throw error;
+    } //end of link try block
+
+    async function scrollToBottom(timeout, viewport) {
+      try {
+        await page.evaluate(
+          async (timeout, viewport) => {
+            await new Promise((resolve, reject) => {
+              reject('Error');
+              let totalHeight = 0,
+                distance = 200,
+                maxHeight = window.innerHeight * viewport;
+              const timer = setInterval(() => {
+                let duration;
+                duration += 200;
+                window.scrollBy(0, distance);
+                totalHeight += distance;
+                if (
+                  totalHeight >= document.body.scrollHeight ||
+                  duration >= timeout ||
+                  totalHeight >= maxHeight
+                ) {
+                  clearInterval(timer);
+                  resolve();
+                }
+              }, 200);
+            }).catch((err) => {
+              console.log(err);
+            });
+          },
+          timeout,
+          viewport
+        );
+      } catch (error) {
+        console.log('Error reject', error);
+      }
     }
+    scrollToBottom(10000, 10);
+    //await page.setViewport({ width: 1920, height: 1080 }); //set browser size if testing with headless false
+    const imageSources = await page.evaluate(() =>
+      Array.from(document.images, (e) => e.src)
+    );
+    //May use let srcArr = e.src.split('/'); let imageFileName = srcArr[srcArr.length -1];
+    const imagesAlt = await page.evaluate(() =>
+      Array.from(document.images, (e) => e.alt)
+    );
+    await browser.close();
+    let objArr = [];
+    //goes through the two arrays of sources and alt tags to make a new obj arr for easy assignment later
+    imageSources.forEach((src, index) => {
+      let obj = {};
+      obj.source = src;
+      obj.alt = imagesAlt[index];
+      objArr.push(obj);
+    });
+    this.imageData = objArr;
+  } //end of start puppet
+
+  async getImages() {
+    await this.startPuppet();
+    return this.imageData;
   }
-  catch(error) {
-    throw error;
-  } //end of Start Puppet
   async getData() {
     await this.startPuppet();
     // console.log(this.data);
-    return this.data;
+    return this.linkData;
   }
 } //end Moriarty
 
