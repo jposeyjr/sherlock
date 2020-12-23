@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 import logger from 'redux-logger';
 import rootReducer from './redux/reducers/_root.reducer';
-import rootSage from './redux/sagas/_root.sage';
+import rootSaga from './redux/sagas/_root.saga';
 
 const sageMiddleware = createSagaMiddleware();
 
@@ -16,6 +16,8 @@ const devCheck =
     ? [sageMiddleware, logger]
     : [sageMiddleware];
 const store = createStore(rootReducer, applyMiddleware(...devCheck));
+
+sageMiddleware.run(rootSaga);
 
 ReactDOM.render(
   <Provider store={store}>
