@@ -1,99 +1,136 @@
 class Moriarty {
-  constructor(url, commands) {
-    this.url = url;
-    this.commands = commands;
-    this.linkData = [];
-    this.imageData = [];
+  constructor(args) {
+    this.url = args.url;
+    this.currentCommands = args.commands;
+    this.allImages = [];
+    this.allLinks = [];
   }
 
-  async startPuppet() {
-    const puppeteer = require('puppeteer-extra');
-    const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-    puppeteer.use(StealthPlugin());
-    //Prevents sites from blocking the puppeteer
-
+  async runPuppeteer() {
+    const puppeteer = require('puppeteer');
+    let commands = [];
+    commands = this.currentCommands;
     const browser = await puppeteer.launch({
-      headless: false, //true when prod to hide browser
+      headless: false,
       args: ['--no-sandbox', '--disable-gpu'],
-    }); //end browser
-    const page = await browser.newPage();
-
-    await page.goto(this.url, {
-      waitUntil: 'networkidle2',
-      timeout: 10000, //gives javascript time to load
-    }); //end of page.goto (loads the page)
-    try {
-      let results = await page.$$eval('a', (as) => as.map((a) => a.href));
-      this.linkData.push(results);
-      console.log('browser closed');
-    } catch (error) {
-      throw error;
-    } //end of link try block
-
-    async function scrollToBottom(timeout, viewport) {
-      try {
-        await page.evaluate(
-          async (timeout, viewport) => {
-            await new Promise((resolve, reject) => {
-              reject('Error');
-              let totalHeight = 0,
-                distance = 200,
-                maxHeight = window.innerHeight * viewport;
-              const timer = setInterval(() => {
-                let duration;
-                duration += 200;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-                if (
-                  totalHeight >= document.body.scrollHeight ||
-                  duration >= timeout ||
-                  totalHeight >= maxHeight
-                ) {
-                  clearInterval(timer);
-                  resolve();
-                }
-              }, 200);
-            }).catch((err) => {
-              console.log(err);
-            });
-          },
-          timeout,
-          viewport
-        );
-      } catch (error) {
-        console.log('Error reject', error);
-      }
-    }
-    scrollToBottom(10000, 10);
-    //await page.setViewport({ width: 1920, height: 1080 }); //set browser size if testing with headless false
-    const imageSources = await page.evaluate(() =>
-      Array.from(document.images, (e) => e.src)
-    );
-    //May use let srcArr = e.src.split('/'); let imageFileName = srcArr[srcArr.length -1];
-    const imagesAlt = await page.evaluate(() =>
-      Array.from(document.images, (e) => e.alt)
-    );
-    await browser.close();
-    let objArr = [];
-    //goes through the two arrays of sources and alt tags to make a new obj arr for easy assignment later
-    imageSources.forEach((src, index) => {
-      let obj = {};
-      obj.source = src;
-      obj.alt = imagesAlt[index];
-      objArr.push(obj);
     });
-    this.imageData = objArr;
-  } //end of start puppet
 
-  async getImages() {
-    await this.startPuppet();
-    return this.imageData;
-  }
-  async getData() {
-    await this.startPuppet();
-    // console.log(this.data);
-    return this.linkData;
-  }
-} //end Moriarty
+    let page = await browser.newPage();
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      if (['image'].indexOf(request.resourceType()) !== -1) {
+        request.abort();
+      } else {
+        request.continue();
+      }
+    });
 
-module.exports = Moriarty;
+    await page.on('console', (msg) => {
+      for (let i = 0; i < msg._args.length; ++i) {
+        msg._args[i].jsonValue().then((result) => {
+          console.log(result);
+        });
+      }
+    });
+
+    await page.goto(this.url);
+
+    let commandIndex = 0;
+    while (commandIndex < commands.length) {
+      try {
+        console.log(`command ${commandIndex + 1}/${commands.length}`);
+        let frames = page.frames();
+        await this.executeCommand(frames[0], commands[commandIndex]);
+        await this.sleep(1000);
+      } catch (error) {
+        console.log(error);
+        break;
+      }
+      commandIndex++;
+    }
+    console.log('done');
+    await browser.close();
+  }
+
+  async executeCommand(frame, command) {
+    console.log(command.type);
+    switch (command.type) {
+      case 'links':
+        try {
+          let results = await frame.$$eval('a', (as) => as.map((a) => a.href));
+          this.allLinks.push(results);
+          return true;
+        } catch (error) {
+          console.log('Error fetching links', error);
+          return false;
+        }
+      case 'images':
+        try {
+          console.log('in image case');
+          async function scrollToBottom(timeout, viewport) {
+            await frame.evaluate(
+              async (timeout, viewport) => {
+                let totalHeight = 0,
+                  distance = 200,
+                  maxHeight = window.innerHeight * viewport;
+                const timer = setInterval(() => {
+                  let duration;
+                  duration += 200;
+                  window.scrollBy(0, distance);
+                  totalHeight += distance;
+                  if (
+                    totalHeight >= document.body.scrollHeight ||
+                    duration >= timeout ||
+                    totalHeight >= maxHeight
+                  ) {
+                    clearInterval(timer);
+                  }
+                }, 200); //timer
+              },
+              timeout,
+              viewport
+            );
+          } //scrollToBottom
+          scrollToBottom(10000, 10);
+          const imageSources = await frame.evaluate(() =>
+            Array.from(document.images, (e) => e.src)
+          );
+
+          const imagesAlt = await frame.evaluate(() =>
+            Array.from(document.images, (e) => e.alt)
+          );
+
+          let objArr = [];
+          imageSources.forEach((src, index) => {
+            let obj = {};
+            obj.source = src;
+            obj.alt = imagesAlt[index];
+            objArr.push(obj);
+          });
+          this.allImages.push(objArr);
+          return true;
+        } catch (error) {
+          console.log('error', error);
+          return false;
+        }
+      default:
+        return false;
+    } //switch
+  }
+
+  sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async getAllImages() {
+    await this.runPuppeteer();
+    return this.allImages;
+  }
+
+  async getAllLinks() {
+    await this.runPuppeteer();
+    return this.allLinks;
+  }
+}
+
+module.exports = { Moriarty };
