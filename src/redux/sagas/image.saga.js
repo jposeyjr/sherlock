@@ -7,7 +7,7 @@ function* imageSaga() {
 
 function* getImages(action) {
   try {
-    const response = yield axios.post(`/api/images/${action.payload}`);
+    const response = yield axios.post('/api/images', action.payload);
     yield put({ type: 'SET_IMAGES', payload: response.data });
   } catch (error) {
     console.log('Error trying to post data from image saga', error);

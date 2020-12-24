@@ -44,6 +44,7 @@ class Moriarty {
         await this.sleep(1000);
       } catch (error) {
         console.log(error);
+        await browser.close();
         break;
       }
       commandIndex++;

@@ -28,9 +28,20 @@ const Home = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (state.checkedLink) {
-      dispatch({ type: 'GET_LINKS' });
+      let data = {
+        url: inputURL,
+        commands: [{ type: 'links' }],
+      };
+      dispatch({ type: 'GET_LINKS', payload: data });
+    } else if (state.checkedImage) {
+      let data = {
+        url: inputURL,
+        commands: [{ type: 'images' }],
+      };
+      dispatch({ type: 'GET_IMAGES', payload: data });
+    } else {
+      console.log('working', inputURL);
     }
-    console.log('working', inputURL);
     setInputURL('');
   };
 
@@ -80,8 +91,8 @@ const Home = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      name='checkLink'
-                      checked={state.checked}
+                      name='checkedLink'
+                      checked={state.checkedLink}
                       onChange={handleChange}
                     />
                   }

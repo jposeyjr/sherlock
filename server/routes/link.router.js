@@ -8,7 +8,7 @@ router.post('/', async (req, res) => {
   req.setTimeout(timeout);
   try {
     let data = req.body;
-    console.log(req.body.url);
+    console.log('data', data);
     while (browsers === maxBrowsers) {
       await sleep(1000);
     }

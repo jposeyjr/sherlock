@@ -7,7 +7,7 @@ function* linkSaga() {
 
 function* getLinks(action) {
   try {
-    const response = yield axios.post(`/api/links/${action.payload}`);
+    const response = yield axios.post('/api/links', action.payload);
     yield put({ type: 'SET_LINKS', payload: response.data });
   } catch (error) {
     console.log('Error trying to post data from link saga', error);
