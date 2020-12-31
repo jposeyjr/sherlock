@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@material-ui/core';
 import { useDispatch } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 import SearchIcon from '@material-ui/icons/Search';
 import useStyles from './styles';
 
@@ -20,6 +21,7 @@ const Home = () => {
     checkedImage: false,
   });
   const dispatch = useDispatch();
+  const history = useHistory();
   const classes = useStyles();
 
   const handleChange = (event) => {
@@ -34,12 +36,14 @@ const Home = () => {
         commands: [{ type: 'links' }],
       };
       dispatch({ type: 'GET_LINKS', payload: data });
+      history.push('/results');
     } else if (state.checkedImage) {
       let data = {
         url: inputURL,
         commands: [{ type: 'images' }],
       };
       dispatch({ type: 'GET_IMAGES', payload: data });
+      history.push('/results');
     } else {
       console.log('working', inputURL);
     }

@@ -8,5 +8,6 @@ export default makeStyles((theme) => ({
   },
   img: {
     margin: theme.spacing(1),
+    maxWidth: 350,
   },
 }));

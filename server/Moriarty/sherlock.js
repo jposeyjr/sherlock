@@ -25,10 +25,17 @@ const getAltTags = async (data) => {
   for (const image of data) {
     count++;
     let tempLink = image.source;
-    cluster.queue(
-      'https://www.google.com/searchbyimage?image_url=' +
-        encodeURIComponent(tempLink)
-    );
+    if (image.alt.length === 0) {
+      image.alt = cluster.queue(
+        'https://www.google.com/searchbyimage?image_url=' +
+          encodeURIComponent(tempLink)
+      );
+    } else {
+      cluster.queue(
+        'https://www.google.com/searchbyimage?image_url=' +
+          encodeURIComponent(tempLink)
+      );
+    }
   }
 
   await cluster.idle();
