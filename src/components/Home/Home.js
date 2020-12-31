@@ -12,6 +12,7 @@ import {
 import { useDispatch } from 'react-redux';
 import SearchIcon from '@material-ui/icons/Search';
 import useStyles from './styles';
+
 const Home = () => {
   const [inputURL, setInputURL] = useState('');
   const [state, setState] = useState({
@@ -47,7 +48,7 @@ const Home = () => {
 
   return (
     <Container component='main' maxWidth='xs'>
-      <Typography align='center' component='h1' variant='h5'>
+      <Typography align='center' component='h1' variant='h4'>
         Sherlock Search
       </Typography>
       <div className={classes.paper}>

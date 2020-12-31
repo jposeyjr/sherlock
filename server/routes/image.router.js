@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const timeout = 10000;
+const timeout = 130000;
 const maxBrowsers = 5;
 let browsers = 0;
 
@@ -14,12 +14,8 @@ router.post('/', async (req, res) => {
       await sleep(1000);
     }
     await getImageHandler(data).then((result) => {
-      let response = {
-        msg: 'got images',
-        images: result,
-      };
       console.log('done fetching images', result);
-      res.send(response);
+      res.send(result);
     });
   } catch (error) {
     res.send({ error: error.toString() });
