@@ -5,6 +5,7 @@ const maxBrowsers = 5;
 let browsers = 0;
 
 router.post('/', async (req, res) => {
+  //puppeteer can fail and needs something to kill it if that happens, this is a good way to do it.
   req.setTimeout(timeout);
   try {
     let data = req.body;

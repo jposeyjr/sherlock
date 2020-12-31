@@ -1,9 +1,10 @@
-const linkReducer = (state = [], action) => {
+const init_state = [];
+const linkReducer = (state = init_state, action) => {
   switch (action.type) {
     case 'SET_LINKS':
       return action.payload;
     case 'RESET_LINKS':
-      return [];
+      return init_state;
     default:
       return state;
   }

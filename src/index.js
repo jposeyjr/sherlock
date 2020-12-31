@@ -10,7 +10,7 @@ import rootSaga from './redux/sagas/_root.saga';
 
 const sageMiddleware = createSagaMiddleware();
 
-//prevent logger when not in dev mode
+//prevent logger when not in dev mode no one wants to see all those logs in production
 const devCheck =
   process.env.NODE_ENV === 'development'
     ? [sageMiddleware, logger]

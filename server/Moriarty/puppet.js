@@ -91,16 +91,18 @@ class Moriarty {
               timeout,
               viewport
             );
-          } //scrollToBottom
+          } //scrollToBottom used to make sure we can get all lazy loaded images 
           scrollToBottom(10000, 10);
+
+          //creates an array of links from the site 
           const imageSources = await frame.evaluate(() =>
             Array.from(document.images, (e) => e.src)
           );
-
+          //creates an array of alt tags from the site 
           const imagesAlt = await frame.evaluate(() =>
             Array.from(document.images, (e) => e.alt)
           );
-
+          //combines the two above arrays together into an obj that has matching key value pairs to make life easier for post processing
           let objArr = [];
           imageSources.forEach((src, index) => {
             let obj = {};
