@@ -108,7 +108,8 @@ class Moriarty {
             obj.alt = imagesAlt[index];
             objArr.push(obj);
           });
-          this.allImages.push(objArr);
+          console.log(objArr);
+          this.allImages = objArr;
           return true;
         } catch (error) {
           console.log('error', error);

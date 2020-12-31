@@ -29,10 +29,14 @@ router.post('/', async (req, res) => {
 
 async function getImageHandler(arg) {
   let puppet = require('../Moriarty/puppet');
+  let getAltTags = require('../Moriarty/sherlock');
   let Moriarty = new puppet.Moriarty(arg);
   browsers += 1;
   try {
-    let imageData = await Moriarty.getAllImages().then((result) => {
+    let tempData = await Moriarty.getAllImages().then((result) => {
+      return result;
+    });
+    let imageData = await getAltTags(tempData).then((result) => {
       return result;
     });
     browsers -= 1;
