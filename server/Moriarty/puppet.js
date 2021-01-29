@@ -7,6 +7,7 @@ class Moriarty {
   }
 
   async runPuppeteer() {
+    //set up puppeteer and adjust for best performance
     const puppeteer = require('puppeteer');
     let commands = [];
     commands = this.currentCommands;
@@ -14,7 +15,7 @@ class Moriarty {
       headless: false,
       args: ['--no-sandbox', '--disable-gpu'],
     });
-
+    //wait for page to load and block image's from displaying to increase performance
     let page = await browser.newPage();
     await page.setRequestInterception(true);
     page.on('request', (request) => {
@@ -35,10 +36,12 @@ class Moriarty {
 
     await page.goto(this.url);
 
+    //command center, used to execute multiple commands in async manner
     let commandIndex = 0;
     while (commandIndex < commands.length) {
       try {
         console.log(`command ${commandIndex + 1}/${commands.length}`);
+        //making multiple frames to execute commands concurrently
         let frames = page.frames();
         await this.executeCommand(frames[0], commands[commandIndex]);
         await this.sleep(1000);
@@ -56,6 +59,7 @@ class Moriarty {
   async executeCommand(frame, command) {
     console.log(command.type);
     switch (command.type) {
+      //grabs all the links from the page
       case 'links':
         try {
           let results = await frame.$$eval('a', (as) => as.map((a) => a.href));
@@ -65,6 +69,7 @@ class Moriarty {
           console.log('Error fetching links', error);
           return false;
         }
+      //grabs all images from the page
       case 'images':
         try {
           console.log('in image case');
@@ -86,19 +91,19 @@ class Moriarty {
                   ) {
                     clearInterval(timer);
                   }
-                }, 200); //timer
+                }, 200);
               },
               timeout,
               viewport
             );
-          } //scrollToBottom used to make sure we can get all lazy loaded images 
+          } //scrollToBottom used to make sure we can get all lazy loaded images
           scrollToBottom(10000, 10);
 
-          //creates an array of links from the site 
+          //creates an array of links from the site
           const imageSources = await frame.evaluate(() =>
             Array.from(document.images, (e) => e.src)
           );
-          //creates an array of alt tags from the site 
+          //creates an array of alt tags from the site
           const imagesAlt = await frame.evaluate(() =>
             Array.from(document.images, (e) => e.alt)
           );
@@ -119,9 +124,10 @@ class Moriarty {
         }
       default:
         return false;
-    } //switch
+    }
   }
 
+  //used to limit amount of chrome browsers that are opened at one time
   sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
